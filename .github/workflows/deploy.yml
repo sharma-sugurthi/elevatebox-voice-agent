@@ -28,8 +28,8 @@ jobs:
       - name: Run Tests
         env:
           GEMINI_API_KEY: placeholder_key
-          EVALUATOR_PHONE: +918688664337
-          MY_PHONE: +919392521762
+          EVALUATOR_PHONE: "+918688664337"
+          MY_PHONE: "+919392521762"
         run: |
           pytest tests/ -v -m "not integration and not live"
 
