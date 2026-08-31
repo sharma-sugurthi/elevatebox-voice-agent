@@ -23,7 +23,7 @@ from app.state import CallState
 logger = logging.getLogger(__name__)
 
 # ── Gemini client setup ────────────────────────────────────────────────────────
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-3.6-flash"
 
 _gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
 
