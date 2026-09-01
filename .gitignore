@@ -35,3 +35,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Agent Junk
+docs/
+CLAUDE.md
+AGENTS.md
+
