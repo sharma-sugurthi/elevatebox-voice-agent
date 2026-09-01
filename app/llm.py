@@ -108,7 +108,7 @@ async def _call_gemini(system_prompt: str, messages: list[dict]) -> str:
         system_instruction=system_prompt,
         response_mime_type="application/json",
         temperature=0.3,
-        max_output_tokens=512,
+        max_output_tokens=1024,
     )
 
     response = await _gemini_client.aio.models.generate_content(
