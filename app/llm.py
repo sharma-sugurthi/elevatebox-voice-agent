@@ -177,6 +177,10 @@ async def think(
 
     provider = config.LLM_PROVIDER.lower()
 
+    # Truncate conversation history to the last 8 messages to prevent free-tier 
+    # TPM (Tokens Per Minute) rate limits on Groq/Gemini during long calls.
+    messages = messages[-8:]
+
     try:
         # Hard 3-second timeout — if we take longer, the conversation feels dead
         raw = await asyncio.wait_for(
