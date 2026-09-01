@@ -73,20 +73,13 @@ def build_system_prompt(state: CallState) -> str:
     examples, output schema.
     """
 
-    # Language instruction — locked or detecting
-    if state.language:
-        lang_map = {"te": "Telugu", "hi": "Hindi", "en": "English"}
-        lang_instruction = (
-            f"Language is LOCKED to {lang_map.get(state.language, state.language)}. "
-            f"You MUST reply in {lang_map.get(state.language, state.language)} only. "
-            f"Code-switching (mixing English words naturally) is fine and expected."
-        )
-    else:
-        lang_instruction = (
-            "Detect the language from the customer's first reply. "
-            "They may speak Telugu, Hindi, or English, and may mix them. "
-            "Mirror their language exactly. Once detected, lock to it."
-        )
+    # Language instruction — dynamic mirroring
+    lang_instruction = (
+        "Mirror the customer's language dynamically. "
+        "If they speak Telugu, reply in Telugu. If they speak Hindi, reply in Hindi. "
+        "If they speak English, reply in English. If they mix languages, code-switch naturally. "
+        "Do NOT lock into one language if they ask you to switch."
+    )
 
     # Discovery gaps — tell the LLM what we still need
     missing = state.discovery.missing_fields()
