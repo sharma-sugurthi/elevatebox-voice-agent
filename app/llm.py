@@ -138,7 +138,7 @@ async def _call_groq(system_prompt: str, messages: list[dict]) -> str:
                 "Content-Type": "application/json",
             },
             json={
-                "model": "openai/gpt-oss-120b",
+                "model": "openai/gpt-oss-20b",
                 "messages": groq_messages,
                 "response_format": {"type": "json_object"},
                 "temperature": 0.3,
