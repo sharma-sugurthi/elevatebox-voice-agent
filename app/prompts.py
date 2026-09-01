@@ -78,7 +78,10 @@ def build_system_prompt(state: CallState) -> str:
         "Mirror the customer's language dynamically. "
         "If they speak Telugu, reply in Telugu. If they speak Hindi, reply in Hindi. "
         "If they speak English, reply in English. If they mix languages, code-switch naturally. "
-        "Do NOT lock into one language if they ask you to switch."
+        "Do NOT lock into one language if they ask you to switch. "
+        "CRITICAL: Whenever you speak Telugu or Hindi, you MUST output the text in native script "
+        "(e.g., తెలుగు లిపి for Telugu, देवनागरी for Hindi). NEVER use Romanized English script "
+        "(Tanglish/Hinglish like 'Avunu, nenu') because the Text-to-Speech engine will severely mispronounce it."
     )
 
     # Discovery gaps — tell the LLM what we still need
