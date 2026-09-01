@@ -46,8 +46,25 @@ def _warn_if_missing(key: str, feature: str) -> str:
 
 # ── LLM (REQUIRED — the brain can't work without this) ───────────────────────
 LLM_PROVIDER: str = _optional("LLM_PROVIDER", "gemini")
-GEMINI_API_KEY: str = _require("GEMINI_API_KEY")
+GEMINI_API_KEY: str = _optional("GEMINI_API_KEY")
 GROQ_API_KEY: str = _optional("GROQ_API_KEY")
+GOOGLE_CREDENTIALS_JSON: str = _optional("GOOGLE_CREDENTIALS_JSON")
+
+GCP_PROJECT_ID = ""
+if GOOGLE_CREDENTIALS_JSON:
+    import json
+    try:
+        creds = json.loads(GOOGLE_CREDENTIALS_JSON)
+        GCP_PROJECT_ID = creds.get("project_id", "")
+        creds_path = "/tmp/gcp_creds.json"
+        with open(creds_path, "w") as f:
+            f.write(GOOGLE_CREDENTIALS_JSON)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+        logger.info(f"Loaded Vertex AI credentials for project: {GCP_PROJECT_ID}")
+    except Exception as e:
+        logger.error(f"Failed to load GOOGLE_CREDENTIALS_JSON: {e}")
+elif not GEMINI_API_KEY and LLM_PROVIDER == "gemini":
+    raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_CREDENTIALS_JSON for Gemini provider")
 
 # ── Vapi (OPTIONAL — needed for live calls, not for brain testing) ────────────
 VAPI_API_KEY: str = _warn_if_missing("VAPI_API_KEY", "outbound call trigger")

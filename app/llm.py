@@ -23,9 +23,12 @@ from app.state import CallState
 logger = logging.getLogger(__name__)
 
 # ── Gemini client setup ────────────────────────────────────────────────────────
-GEMINI_MODEL = "gemini-3.6-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
-_gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
+if config.GCP_PROJECT_ID:
+    _gemini_client = genai.Client(vertexai=True, project=config.GCP_PROJECT_ID, location="us-central1")
+else:
+    _gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
 
 # ── Response schema ────────────────────────────────────────────────────────────
 # Default fallback returned when LLM times out or fails.
@@ -177,22 +180,12 @@ async def think(
 
     provider = config.LLM_PROVIDER.lower()
 
-    # Truncate conversation history to the last 8 messages to prevent free-tier 
-    # TPM (Tokens Per Minute) rate limits on Groq/Gemini during long calls.
-    messages = messages[-8:]
-    
-    # CRITICAL FIX: The API throws a '400 Bad Request' if the conversation 
-    # history starts with an 'assistant' message. We must ensure the first 
-    # message in our truncated list is from the user.
-    if messages and messages[0].get("role") != "user":
-        messages = messages[1:]
-
     try:
-        # Hard 3-second timeout — if we take longer, the conversation feels dead
+        # Hard 5-second timeout — if we take longer, the conversation feels dead
         raw = await asyncio.wait_for(
             _call_gemini(system_prompt, messages) if provider == "gemini"
             else _call_groq(system_prompt, messages),
-            timeout=3.0,
+            timeout=5.0,
         )
         result = _parse_response(raw)
         logger.info(
@@ -202,7 +195,7 @@ async def think(
         return result
 
     except asyncio.TimeoutError:
-        logger.error(f"[llm] {provider} timed out after 3s — returning fallback")
+        logger.error(f"[llm] {provider} timed out after 5s — returning fallback")
         return _fallback_response(state)
 
     except json.JSONDecodeError as e:
