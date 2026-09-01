@@ -18,29 +18,11 @@ def setup_function():
 
 # ── Language instruction ──────────────────────────────────────────────────────
 
-def test_prompt_has_detect_instruction_when_language_unknown():
+def test_prompt_uses_dynamic_language_mirroring():
     state = CallState(call_id="p001")
     prompt = build_system_prompt(state)
-    assert "Detect the language" in prompt
-
-
-def test_prompt_locks_to_telugu():
-    state = CallState(call_id="p002", language="te")
-    prompt = build_system_prompt(state)
-    assert "LOCKED to Telugu" in prompt
-    assert "Detect" not in prompt
-
-
-def test_prompt_locks_to_hindi():
-    state = CallState(call_id="p003", language="hi")
-    prompt = build_system_prompt(state)
-    assert "LOCKED to Hindi" in prompt
-
-
-def test_prompt_locks_to_english():
-    state = CallState(call_id="p004", language="en")
-    prompt = build_system_prompt(state)
-    assert "LOCKED to English" in prompt
+    assert "Mirror the customer's language dynamically" in prompt
+    assert "Do NOT lock into one language" in prompt
 
 
 # ── Discovery gaps ────────────────────────────────────────────────────────────

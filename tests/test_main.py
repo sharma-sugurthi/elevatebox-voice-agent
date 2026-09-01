@@ -329,8 +329,9 @@ def test_webhook_bad_json_returns_200(client):
 
 # ── /call/trigger ─────────────────────────────────────────────────────────────
 
-def test_call_trigger_returns_503_when_vapi_disabled(client):
+def test_call_trigger_returns_503_when_vapi_disabled(client, monkeypatch):
     """Without Vapi keys, /call/trigger returns 503 with helpful message."""
+    monkeypatch.setattr("app.main.config.VAPI_ENABLED", False)
     resp = client.post("/call/trigger", json={})
     assert resp.status_code == 503
     assert "disabled" in resp.json()["detail"].lower()
