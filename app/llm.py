@@ -180,6 +180,12 @@ async def think(
     # Truncate conversation history to the last 8 messages to prevent free-tier 
     # TPM (Tokens Per Minute) rate limits on Groq/Gemini during long calls.
     messages = messages[-8:]
+    
+    # CRITICAL FIX: The API throws a '400 Bad Request' if the conversation 
+    # history starts with an 'assistant' message. We must ensure the first 
+    # message in our truncated list is from the user.
+    if messages and messages[0].get("role") != "user":
+        messages = messages[1:]
 
     try:
         # Hard 3-second timeout — if we take longer, the conversation feels dead
