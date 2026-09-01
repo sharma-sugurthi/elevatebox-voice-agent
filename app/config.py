@@ -60,6 +60,7 @@ if GOOGLE_CREDENTIALS_JSON:
         with open(creds_path, "w") as f:
             f.write(GOOGLE_CREDENTIALS_JSON)
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+        LLM_PROVIDER = "gemini"  # Force Gemini when Vertex is active
         logger.info(f"Loaded Vertex AI credentials for project: {GCP_PROJECT_ID}")
     except Exception as e:
         logger.error(f"Failed to load GOOGLE_CREDENTIALS_JSON: {e}")
