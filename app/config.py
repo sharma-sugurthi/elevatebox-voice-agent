@@ -67,6 +67,10 @@ if GOOGLE_CREDENTIALS_JSON:
 elif not GEMINI_API_KEY and LLM_PROVIDER == "gemini":
     raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_CREDENTIALS_JSON for Gemini provider")
 
+# ── Database (Turso) ──────────────────────────────────────────────────────────
+TURSO_DATABASE_URL: str = _warn_if_missing("TURSO_DATABASE_URL", "Persistent state storage")
+TURSO_AUTH_TOKEN: str = _warn_if_missing("TURSO_AUTH_TOKEN", "Persistent state storage")
+
 # ── Vapi (OPTIONAL — needed for live calls, not for brain testing) ────────────
 VAPI_API_KEY: str = _warn_if_missing("VAPI_API_KEY", "outbound call trigger")
 VAPI_PHONE_NUMBER_ID: str = _warn_if_missing("VAPI_PHONE_NUMBER_ID", "outbound call trigger")

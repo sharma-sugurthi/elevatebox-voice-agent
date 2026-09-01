@@ -25,6 +25,9 @@ from typing import Optional
 import httpx
 from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
+
+from app.db import init_db, close_db, sync_state_to_turso
 
 from app import config
 from app import state as state_store
@@ -39,7 +42,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ── App ───────────────────────────────────────────────────────────────────────
-app = FastAPI(title="ElevateBox Voice Agent", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize components on startup
+    await init_db()
+    yield
+    # Cleanup on shutdown
+    await close_db()
+
+app = FastAPI(title="ElevateBox Voice Agent", version="1.0.0", lifespan=lifespan)
 
 # ── Voice config ──────────────────────────────────────────────────────────────
 # Azure Neural Indian English voice for "Priya"
@@ -108,6 +119,8 @@ async def _fire_hot_lead_whatsapp(call_id: str, st) -> None:
     (next turn may arrive before send completes).
     """
     st.whatsapp_sent = True   # set flag immediately
+    import asyncio
+    asyncio.create_task(sync_state_to_turso(st))
     name = _get_customer_name(st)
     sells = st.discovery.sells or "your business"
     success = await whatsapp.send_hot_lead(
@@ -265,6 +278,9 @@ async def chat_completions(request: Request):
             scheduler.book(call_id, dt)
             st.callback_booked = dt
             logger.info(f"[main] Callback booked for {call_id}: {dt}")
+
+    # Async flush state to Turso
+    asyncio.create_task(sync_state_to_turso(st))
 
     # Fire hot-lead WhatsApp (fire-and-forget — don't block voice response)
     if llm_output.get("fire_whatsapp_now") and not st.whatsapp_sent:
