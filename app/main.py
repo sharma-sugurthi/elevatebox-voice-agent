@@ -219,7 +219,27 @@ async def chat_completions(request: Request):
 
     # No user turns yet — Vapi is initialising, return the opening line
     if not messages:
-        return JSONResponse(_openai_response(OPENING_LINE))
+        if body.get("stream"):
+            from fastapi.responses import StreamingResponse
+            import json
+            async def stream_generator():
+                chunk_id = f"chatcmpl-{uuid.uuid4().hex[:8]}"
+                chunk = {
+                    "id": chunk_id,
+                    "object": "chat.completion.chunk",
+                    "choices": [{"index": 0, "delta": {"content": OPENING_LINE}, "finish_reason": None}]
+                }
+                end_chunk = {
+                    "id": chunk_id,
+                    "object": "chat.completion.chunk",
+                    "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]
+                }
+                yield f"data: {json.dumps(chunk)}\n\n"
+                yield f"data: {json.dumps(end_chunk)}\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingResponse(stream_generator(), media_type="text/event-stream")
+        else:
+            return JSONResponse(_openai_response(OPENING_LINE))
 
     # Get or create call state
     st = state_store.get_or_create(call_id)
@@ -256,7 +276,29 @@ async def chat_completions(request: Request):
     # Append assistant turn to transcript
     state_store.append_transcript(call_id, "assistant", spoken)
 
-    return JSONResponse(_openai_response(spoken))
+    if body.get("stream"):
+        from fastapi.responses import StreamingResponse
+        import json
+        
+        async def stream_generator():
+            chunk_id = f"chatcmpl-{uuid.uuid4().hex[:8]}"
+            chunk = {
+                "id": chunk_id,
+                "object": "chat.completion.chunk",
+                "choices": [{"index": 0, "delta": {"content": spoken}, "finish_reason": None}]
+            }
+            end_chunk = {
+                "id": chunk_id,
+                "object": "chat.completion.chunk",
+                "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]
+            }
+            yield f"data: {json.dumps(chunk)}\n\n"
+            yield f"data: {json.dumps(end_chunk)}\n\n"
+            yield "data: [DONE]\n\n"
+            
+        return StreamingResponse(stream_generator(), media_type="text/event-stream")
+    else:
+        return JSONResponse(_openai_response(spoken))
 
 
 @app.post("/vapi/webhook")
