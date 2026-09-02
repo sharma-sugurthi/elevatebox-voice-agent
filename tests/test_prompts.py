@@ -18,11 +18,11 @@ def setup_function():
 
 # ── Language instruction ──────────────────────────────────────────────────────
 
-def test_prompt_uses_dynamic_language_mirroring():
+def test_prompt_uses_last_message_language_detection():
     state = CallState(call_id="p001")
     prompt = build_system_prompt(state)
-    assert "Mirror the customer's language dynamically" in prompt
-    assert "Do NOT lock into one language" in prompt
+    assert "Look at the LAST message" in prompt
+    assert "NEVER look at earlier turns" in prompt
 
 
 # ── Discovery gaps ────────────────────────────────────────────────────────────
