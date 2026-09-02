@@ -181,11 +181,11 @@ async def think(
     provider = config.LLM_PROVIDER.lower()
 
     try:
-        # Hard 5-second timeout — if we take longer, the conversation feels dead
+        # Hard 8-second timeout — if we take longer, the conversation feels dead
         raw = await asyncio.wait_for(
             _call_gemini(system_prompt, messages) if provider == "gemini"
             else _call_groq(system_prompt, messages),
-            timeout=5.0,
+            timeout=8.0,
         )
         result = _parse_response(raw)
         logger.info(
@@ -195,7 +195,7 @@ async def think(
         return result
 
     except asyncio.TimeoutError:
-        logger.error(f"[llm] {provider} timed out after 5s — returning fallback")
+        logger.error(f"[llm] {provider} timed out after 8s — returning fallback")
         return _fallback_response(state)
 
     except json.JSONDecodeError as e:
