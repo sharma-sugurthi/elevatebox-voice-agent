@@ -29,7 +29,7 @@ def _arg(value):
     elif isinstance(value, int):
         return {"type": "integer", "value": str(value)}
     elif isinstance(value, float):
-        return {"type": "float", "value": str(value)}
+        return {"type": "float", "value": value}
     else:
         return {"type": "text", "value": str(value)}
 
@@ -59,6 +59,8 @@ async def _execute(sql: str, args: list = None) -> None:
             },
             json=payload,
         )
+        if resp.status_code != 200:
+            logger.error(f"[db] Turso HTTP error {resp.status_code}: {resp.text}")
         resp.raise_for_status()
 
 
