@@ -73,15 +73,17 @@ def build_system_prompt(state: CallState) -> str:
     examples, output schema.
     """
 
-    # Language instruction — dynamic mirroring
+    # Language instruction — per-turn detection from the LAST user message only
     lang_instruction = (
-        "Mirror the customer's language dynamically. "
-        "If they speak Telugu, reply in Telugu. If they speak Hindi, reply in Hindi. "
-        "If they speak English, reply in English. If they mix languages, code-switch naturally. "
-        "Do NOT lock into one language if they ask you to switch. "
-        "CRITICAL: Whenever you speak Telugu or Hindi, you MUST output the text in native script "
-        "(e.g., తెలుగు లిపి for Telugu, देवनागरी for Hindi). NEVER use Romanized English script "
-        "(Tanglish/Hinglish like 'Avunu, nenu') because the Text-to-Speech engine will severely mispronounce it."
+        "LANGUAGE RULE — follow this exactly every turn:\n"
+        "1. Look at the LAST message the customer just sent. That message alone determines the language for YOUR reply.\n"
+        "2. If their last message is in English, reply in English.\n"
+        "3. If their last message is in Telugu, reply in Telugu using native script (తెలుగు లిపి).\n"
+        "4. If their last message is in Hindi, reply in Hindi using native Devanagari script (हिन्दी).\n"
+        "5. If their last message mixes languages, reply in whichever language was dominant in that message.\n"
+        "NEVER look at earlier turns to decide language. NEVER continue in Telugu or Hindi if the customer's last message was English.\n"
+        "CRITICAL: Always use native script for Telugu and Hindi — NEVER Romanized Tanglish or Hinglish like 'nenu' or 'acha'. "
+        "The TTS engine will mispronounce Romanized text badly."
     )
 
     # Discovery gaps — tell the LLM what we still need
