@@ -100,5 +100,5 @@ def test_prompt_contains_output_schema_keys():
 
 def test_opening_line_mentions_elevate_box():
     assert "ElevateBox" in OPENING_LINE
-    assert "Priya" in OPENING_LINE
+    assert "Karthik" in OPENING_LINE
     assert "Hyderabad" in OPENING_LINE
