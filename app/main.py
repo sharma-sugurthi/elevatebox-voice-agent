@@ -53,10 +53,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="ElevateBox Voice Agent", version="1.0.0", lifespan=lifespan)
 
 # ── Voice config ──────────────────────────────────────────────────────────────
-# Azure Neural Indian English voice for "Priya"
+# Cartesia Sonic 3.5 — "Ayush Friendly Neighbour"
+# Native Telugu / Hindi / English speaker. voiceId from Cartesia voice library.
 VOICE_CONFIG = {
-    "provider": "azure",
-    "voiceId": "en-IN-NeerjaNeural",
+    "provider": "cartesia",
+    "voiceId": "791d5162-d5eb-40f0-8189-f19db44611d8",
+    "model": "sonic-3.5",
 }
 
 # Vapi API base URL
@@ -163,12 +165,24 @@ def _build_assistant_config() -> dict:
     """
     Build the Vapi assistant configuration for inbound/outbound calls.
     This tells Vapi to use our Custom LLM endpoint as the brain.
+
+    Transcriber: Soniox — best-in-class for code-mixed Telugu/Hindi/English.
+    Produces proper Unicode script output, not romanized English.
+    Deepgram is kept as fallback for resilience.
     """
     return {
         "model": {
             "provider": "custom-llm",
             "url": f"{config.PUBLIC_BASE_URL}/chat/completions",
             "model": "elevatebox-priya",
+        },
+        "transcriber": {
+            "provider": "soniox",
+            "fallbackPlan": {
+                "transcribers": [
+                    {"provider": "deepgram", "model": "nova-2", "language": "en"}
+                ]
+            },
         },
         "voice": VOICE_CONFIG,
         "firstMessage": OPENING_LINE,
