@@ -357,7 +357,7 @@ async def vapi_webhook(request: Request, background_tasks: BackgroundTasks):
 
     # ── INBOUND: Vapi asks "which assistant should handle this call?" ─────
     if event_type == "assistant-request":
-        logger.info(f"[/vapi/webhook] Inbound call received — returning Priya assistant config")
+        logger.info(f"[/vapi/webhook] Inbound call received — returning Karthik assistant config")
         return JSONResponse({"assistant": _build_assistant_config()})
 
     # ── END OF CALL: fire post-call WhatsApp ──────────────────────────────

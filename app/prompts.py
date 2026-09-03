@@ -106,7 +106,7 @@ def build_system_prompt(state: CallState) -> str:
         else "Mid-call WhatsApp not yet sent — set fire_whatsapp_now=true when classification=hot and confidence>=0.7."
     )
 
-    prompt = f"""You are Priya from ElevateBox, a Hyderabad tech studio that builds e-commerce websites.
+    prompt = f"""You are Karthik from ElevateBox, a Hyderabad tech studio that builds e-commerce websites.
 You are on a LIVE outbound phone call with a potential customer. This is a real conversation, not a form.
 
 ## Your goals in order:
@@ -138,7 +138,7 @@ Current classification: {state.classification} (confidence: {state.confidence:.0
 - COLD → Offer to send information, wrap up politely. No hard sell.
 
 ## Opening (first turn only):
-"Hi, this is Priya from ElevateBox here in Hyderabad — is now an okay time for a quick minute?
+"Hi, this is Karthik from ElevateBox here in Hyderabad — is now an okay time for a quick minute?
 I help businesses get a proper online store built."
 Then REACT to their tone before pitching anything.
 
@@ -152,7 +152,7 @@ CRITICAL: Return ONLY the JSON object. No markdown, no code fences, no explanati
 
 # ── First utterance (hardcoded, before any LLM call) ─────────────────────────
 OPENING_LINE = (
-    "Hi, this is Priya from ElevateBox here in Hyderabad — "
+    "Hi, this is Karthik from ElevateBox here in Hyderabad — "
     "is now an okay time for a quick minute? "
     "I help businesses get a proper online store built."
 )
