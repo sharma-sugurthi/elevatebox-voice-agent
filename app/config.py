@@ -75,6 +75,11 @@ TURSO_AUTH_TOKEN: str = _warn_if_missing("TURSO_AUTH_TOKEN", "Persistent state s
 VAPI_API_KEY: str = _warn_if_missing("VAPI_API_KEY", "outbound call trigger")
 VAPI_PHONE_NUMBER_ID: str = _warn_if_missing("VAPI_PHONE_NUMBER_ID", "outbound call trigger")
 
+# ── Plivo (OPTIONAL — needed for Plivo-triggered outbound calls) ──────────────
+PLIVO_AUTH_ID: str = _warn_if_missing("PLIVO_AUTH_ID", "Plivo outbound calling")
+PLIVO_AUTH_TOKEN: str = _warn_if_missing("PLIVO_AUTH_TOKEN", "Plivo outbound calling")
+PLIVO_FROM_NUMBER: str = _optional("PLIVO_FROM_NUMBER", "")
+
 # ── WhatsApp (OPTIONAL — needed for live WhatsApp sends) ──────────────────────
 WHATSAPP_TOKEN: str = _warn_if_missing("WHATSAPP_TOKEN", "WhatsApp messaging")
 WHATSAPP_PHONE_NUMBER_ID: str = _warn_if_missing("WHATSAPP_PHONE_NUMBER_ID", "WhatsApp messaging")
@@ -89,3 +94,4 @@ PUBLIC_BASE_URL: str = _optional("PUBLIC_BASE_URL", "http://localhost:8000")
 # ── Feature flags (derived from config) ───────────────────────────────────────
 WHATSAPP_ENABLED: bool = bool(WHATSAPP_TOKEN and WHATSAPP_PHONE_NUMBER_ID)
 VAPI_ENABLED: bool = bool(VAPI_API_KEY and VAPI_PHONE_NUMBER_ID)
+PLIVO_ENABLED: bool = bool(PLIVO_AUTH_ID and PLIVO_AUTH_TOKEN and PLIVO_FROM_NUMBER)

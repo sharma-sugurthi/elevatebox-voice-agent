@@ -31,7 +31,7 @@ from app.db import init_db, close_db, sync_state_to_turso
 
 from app import config
 from app import state as state_store
-from app import llm, whatsapp, scheduler
+from app import llm, whatsapp, scheduler, plivo_client
 from app.prompts import build_system_prompt, OPENING_LINE
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -387,31 +387,45 @@ async def vapi_webhook(request: Request, background_tasks: BackgroundTasks):
 @app.post("/call/trigger")
 async def trigger_call(request: Request):
     """
-    Trigger an outbound call to the evaluator via Vapi REST API.
+    Trigger an outbound call. Two paths:
 
-    Optional JSON body:
-      { "phone": "+918688664337" }   — overrides EVALUATOR_PHONE from .env
+    Path A (preferred): Plivo is configured → use Plivo to dial out.
+      Plivo's US number calls the customer. Audio routes through Vapi
+      via the SIP trunk we registered. Vapi runs our Custom LLM + Cartesia voice.
 
-    Uses Vapi's Custom LLM mode so our /chat/completions is the brain.
-    Requires a paid Vapi/Twilio number (VAPI_ENABLED must be True).
+    Path B (fallback): No Plivo → use Vapi directly (needs paid Vapi number).
     """
-    if not config.VAPI_ENABLED:
-        return JSONResponse(
-            {
-                "status": "error",
-                "detail": "Outbound calling disabled — VAPI_API_KEY and VAPI_PHONE_NUMBER_ID not configured. "
-                          "Use the inbound Vapi number to test instead.",
-            },
-            status_code=503,
-        )
-
     try:
         body = await request.json()
         to_phone = body.get("phone", config.EVALUATOR_PHONE)
     except Exception:
         to_phone = config.EVALUATOR_PHONE
 
-    logger.info(f"[/call/trigger] Initiating call to {to_phone}")
+    # Path A: Plivo
+    if config.PLIVO_ENABLED:
+        logger.info(f"[/call/trigger] Plivo outbound to {to_phone}")
+        try:
+            result = await plivo_client.trigger_outbound_call(
+                to_number=to_phone,
+                answer_url=f"{config.PUBLIC_BASE_URL}/plivo/answer",
+            )
+            return JSONResponse({"status": "call_started", "provider": "plivo", "to": to_phone, "detail": result})
+        except Exception as e:
+            logger.error(f"[/call/trigger] Plivo failed: {e}")
+            return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
+
+    # Path B: Vapi fallback
+    if not config.VAPI_ENABLED:
+        return JSONResponse(
+            {
+                "status": "error",
+                "detail": "Outbound calling disabled — No Plivo configuration, and VAPI_API_KEY/VAPI_PHONE_NUMBER_ID missing. "
+                          "Use the inbound Vapi number to test instead.",
+            },
+            status_code=503,
+        )
+
+    logger.info(f"[/call/trigger] Initiating call to {to_phone} via Vapi directly")
 
     call_payload = {
         "phoneNumberId": config.VAPI_PHONE_NUMBER_ID,
@@ -435,9 +449,10 @@ async def trigger_call(request: Request):
         if resp.status_code in (200, 201):
             call_data = resp.json()
             call_id = call_data.get("id", "unknown")
-            logger.info(f"[/call/trigger] Call started: {call_id}")
+            logger.info(f"[/call/trigger] Call started via Vapi: {call_id}")
             return JSONResponse({
                 "status": "call_started",
+                "provider": "vapi",
                 "call_id": call_id,
                 "to": to_phone,
             })
@@ -455,3 +470,20 @@ async def trigger_call(request: Request):
     except Exception as e:
         logger.error(f"[/call/trigger] Unexpected error: {e}")
         return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
+
+
+@app.get("/plivo/answer")
+async def plivo_answer():
+    """
+    Plivo answer URL — called when outbound call is picked up.
+    Returns Plivo XML that connects the call to our Vapi Custom LLM assistant.
+    We use a <Dial> to SIP-connect to Vapi's inbound handling.
+    """
+    from fastapi.responses import Response
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Dial>
+        <User>sip:sip.vapi.ai;transport=udp</User>
+    </Dial>
+</Response>"""
+    return Response(content=xml, media_type="application/xml")
