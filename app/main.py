@@ -274,12 +274,14 @@ async def chat_completions(request: Request):
     # Build system prompt from current state
     system_prompt = build_system_prompt(st)
 
-    # Append latest user turn to transcript
-    latest_user_msg = messages[-1]["content"]
-    state_store.append_transcript(call_id, "user", latest_user_msg)
+    # Sync full transcript from Vapi (captures all past user/assistant turns)
+    st.transcript = messages.copy()
 
     # Call the LLM brain — NEVER raises (has internal fallback)
     llm_output = await llm.think(system_prompt, messages, st)
+
+    # Append the new assistant response to our local transcript immediately
+    st.transcript.append({"role": "assistant", "content": llm_output["say"]})
 
     # Update state from LLM output
     state_store.update_from_llm(call_id, llm_output)

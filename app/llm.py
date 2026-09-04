@@ -59,10 +59,14 @@ def _parse_response(raw_text: str) -> dict:
     """
     data = json.loads(raw_text)
 
-    # Ensure required keys exist with sane defaults
-    data.setdefault("say", "Could you repeat that?")
-    data.setdefault("language", "en")
-    data.setdefault("discovery", {})
+    # Ensure required keys exist and are not null
+    if not data.get("say"):
+        data["say"] = "Could you repeat that?"
+    if not data.get("language"):
+        data["language"] = "en"
+    if not isinstance(data.get("discovery"), dict):
+        data["discovery"] = {}
+        
     data.setdefault("classification", "cold")
     data.setdefault("confidence", 0.0)
     data.setdefault("barrier", None)
